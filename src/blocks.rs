@@ -265,6 +265,7 @@ impl BlockArrangement {
 
 #[cfg(test)]
 mod block_arrangement_tests {
+    use crate::orientation::RotationAmount;
     use super::*;
 
     #[test]
@@ -364,6 +365,75 @@ mod block_arrangement_tests {
         let mut clone = blocks.clone();
         let mut o = Orientation::default();
         o.mirror(Axis3D::X);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+    }
+
+    #[test]
+    fn test_eq_with_x_rot() {
+        let mut blocks = BlockArrangement::new();
+        blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
+        let mut clone = blocks.clone();
+        let mut o = Orientation::default();
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+    }
+
+    #[test]
+    fn test_eq_with_y_rot() {
+        let mut blocks = BlockArrangement::new();
+        blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
+        let mut clone = blocks.clone();
+        let mut o = Orientation::default();
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+    }
+
+    #[test]
+    fn test_eq_with_z_rot() {
+        let mut blocks = BlockArrangement::new();
+        blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
+        let mut clone = blocks.clone();
+        let mut o = Orientation::default();
+        o.rotate(Axis3D::Z, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Z, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Z, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Z, RotationAmount::Ninety);
         clone.set_orientation(o);
         assert_eq!(blocks, clone);
     }
