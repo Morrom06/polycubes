@@ -59,7 +59,7 @@ impl Mapper {
         if !self.dimension.in_bounds(&point) {
             return None;
         }
-        point.apply_orientation(&self.orientation.negative());
+        point.apply_orientation(&self.orientation.inverse());
 
         let u_point = point.map_all(|i_val| {
             (i_val + self.dimension.arm_size() as i32) as usize

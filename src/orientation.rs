@@ -41,7 +41,7 @@ impl Add for Orientation {
 impl Orientation {
     /// Returns
     /// An [Orientation] that when added to the input will result in the default orientation.
-    pub fn negative(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         Self {
             x_mir: self.x_mir,
             y_mir: self.y_mir,
