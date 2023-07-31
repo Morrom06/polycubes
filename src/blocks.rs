@@ -52,7 +52,7 @@ impl BlockArrangement {
         if self.num_blocks + 1 > self.mapper.dimension().arm_size() as u8 {
             self.grow((self.num_blocks + 1) as usize)
         }
-        let index = self.mapper.unresolve(&point)
+        let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
         self.bitset.set(index, true);
         self.num_blocks += 1;
@@ -64,7 +64,7 @@ impl BlockArrangement {
         let mut new_block = BlockArrangement::with_capacity(cap);
         self.bitset.ones()
             .map(|index| self.mapper.resolve(index).expect("Save mappings expected"))
-            .map(|coordinate| new_block.mapper.unresolve(&coordinate).expect("Save mapping expected since it of larger capacity"))
+            .map(|coordinate| new_block.mapper.unresolve(coordinate).expect("Save mapping expected since it of larger capacity"))
             .for_each(|index| new_block.bitset.set(index, true));
         new_block.num_blocks = self.num_blocks;
         *self = new_block;
@@ -103,7 +103,7 @@ impl BlockArrangement {
         NEIGHBOR_OFFSETS.iter().cloned().map(|offset| offset + *point)
             .map(|coordinate| coordinate - self.offset)
             // Resolves the point to the corresponding index and filters only in bound indices.
-            .filter_map(|coordinate| self.mapper.unresolve(&coordinate))
+            .filter_map(|coordinate| self.mapper.unresolve(coordinate))
             .any(|i| self.bitset[i])
     }
 
@@ -190,7 +190,7 @@ impl BlockArrangement {
     }
 
     fn set_origin_block(&mut self) {
-        self.bitset.set(self.mapper.unresolve(&Point3D::default()).expect("Save conversion"), true);
+        self.bitset.set(self.mapper.unresolve(Point3D::default()).expect("Save conversion"), true);
         self.num_blocks += 1;
     }
 }
