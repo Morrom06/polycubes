@@ -81,10 +81,10 @@ macro_rules! num_funcs_for_point {
 
             /// Calculates the distance to the origin.
             pub fn distance_to_origin(&self) -> Decimal {
-                let square_sum = self.x * self.x + self.y * self.y + self.z + self.z;
+                let square_sum = (self.x * self.x) + (self.y * self.y) + (self.z * self.z);
                 let sqroot = f64::sqrt(square_sum as f64);
                 use rust_decimal::prelude::FromPrimitive;
-                Decimal::from_f64(sqroot).unwrap()
+                Decimal::from_f64(sqroot).expect("This is a save conversion since the result of sqrt is expected to be save")
             }
 
         }
