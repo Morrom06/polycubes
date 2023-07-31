@@ -54,6 +54,9 @@ impl BlockArrangement {
         }
         let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
+        if !self.bitset[index] {
+            self.num_blocks += 1;
+        }
         self.bitset.set(index, true);
         self.num_blocks += 1;
         self.recenter();
