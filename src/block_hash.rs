@@ -43,3 +43,23 @@ impl From<&BlockArrangement> for BlockHash {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::orientation::OrientationIterator;
+    use crate::point::Point3D;
+    use super::*;
+
+    #[test]
+    fn test_orientation_hashing() {
+        let mut block = BlockArrangement::new();
+        block.add_block_at(Point3D::new(1,0,0)).expect("Save adding");
+        block.add_block_at(Point3D::new(0,1,0)).expect("Save adding");
+        let hash = BlockHash::from(&block);
+        OrientationIterator::default()
+            .for_each(|orientation| {
+                block.set_orientation(orientation);
+                let oriented_hash = BlockHash::from(&block);
+                assert_eq!(hash, oriented_hash)
+            })
+    }
+}
