@@ -1,8 +1,8 @@
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
 use rust_decimal::Decimal;
-use rust_decimal::prelude::Zero;
-use crate::mapper::{Mapper, Orientation};
+use crate::mapper::{Mapper};
+use crate::orientation::Orientation;
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
 
 

@@ -1,9 +1,8 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Sub};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::Decimal;
 use strum::EnumIter;
-use crate::mapper::{Orientation, RotationAmount};
 
 #[derive(Debug, Default, Eq, PartialEq, Copy, Clone)]
 #[derive(Setters, MutGetters, Getters)]
@@ -18,6 +17,7 @@ pub struct Point3D<T> {
 
 macro_rules! num_funcs_for_point {
     ($num_type:ty) => {
+        use crate::orientation::*;
         impl Point3D<$num_type> {
 
             /// Performs a clockwise 90 degree 2 dimensional rotation.
@@ -91,7 +91,6 @@ macro_rules! num_funcs_for_point {
     };
 }
 
-num_funcs_for_point!(isize);
 num_funcs_for_point!(i32);
 
 impl<T: Add<Output = T>> Add for Point3D<T> {
