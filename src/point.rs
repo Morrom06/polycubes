@@ -43,6 +43,12 @@ macro_rules! num_funcs_for_point {
             }
 
             pub fn rotate(&mut self, axis: Axis3D, amount: RotationAmount) {
+                let rotations = match amount {
+                    RotationAmount::Zero => {return;}
+                    RotationAmount::Ninety => {1}
+                    RotationAmount::OneEighty => {2}
+                    RotationAmount::TwoSeventy => {3}
+                };
                 let (x_ref, y_ref) = match axis {
                     Axis3D::X => {
                         (&mut self.y, &mut self.z)
@@ -54,12 +60,7 @@ macro_rules! num_funcs_for_point {
                         (&mut self.x, &mut self.y)
                     }
                 };
-                for _i in 0..match amount {
-                    RotationAmount::Zero => {0}
-                    RotationAmount::Ninety => {1}
-                    RotationAmount::OneEighty => {2}
-                    RotationAmount::TwoSeventy => {3}
-                } {
+                for _i in 0..rotations {
                     Self::rotate_2d(x_ref, y_ref);
                 }
             }
