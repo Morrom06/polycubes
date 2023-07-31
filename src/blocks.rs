@@ -115,33 +115,13 @@ impl BlockArrangement {
 
     /// Returns true if the point has any neighbor blocks.
     pub fn has_neighbors(&self, point: &Point3D<i32>) -> bool {
-        const NEIGHBOR_OFFSETS: [Point3D<i32>; 26] = [
+        const NEIGHBOR_OFFSETS: [Point3D<i32>; 6] = [
             Point3D::new(0, 0, -1),
             Point3D::new(0, 0, 1),
             Point3D::new(0, -1, 0),
-            Point3D::new(0, -1, -1),
-            Point3D::new(0, -1, 1),
             Point3D::new(0, 1, 0),
-            Point3D::new(0, 1, -1),
-            Point3D::new(0, 1, 1),
             Point3D::new(-1, 0, 0),
-            Point3D::new(-1, 0, -1),
-            Point3D::new(-1, 0, 1),
-            Point3D::new(-1, -1, 0),
-            Point3D::new(-1, -1, -1),
-            Point3D::new(-1, -1, 1),
-            Point3D::new(-1, 1, 0),
-            Point3D::new(-1, 1, -1),
-            Point3D::new(-1, 1, 1),
             Point3D::new(1, 0, 0),
-            Point3D::new(1, 0, -1),
-            Point3D::new(1, 0, 1),
-            Point3D::new(1, -1, 0),
-            Point3D::new(1, -1, -1),
-            Point3D::new(1, -1, 1),
-            Point3D::new(1, 1, 0),
-            Point3D::new(1, 1, -1),
-            Point3D::new(1, 1, 1)
         ];
         NEIGHBOR_OFFSETS.iter().cloned().map(|offset| offset + *point)
             .map(|coordinate| self.global_to_this(coordinate))
