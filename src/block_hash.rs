@@ -52,8 +52,8 @@ mod tests {
     #[test]
     fn test_orientation_hashing() {
         let mut block = BlockArrangement::new();
-        block.add_block_at(Point3D::new(1,0,0)).expect("Save adding");
-        block.add_block_at(Point3D::new(0,1,0)).expect("Save adding");
+        block.add_block_at(&Point3D::new(1,0,0)).expect("Save adding");
+        block.add_block_at(&Point3D::new(0,1,0)).expect("Save adding");
         let hash = BlockHash::from(&block);
         OrientationIterator::default()
             .for_each(|orientation| {

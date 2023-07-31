@@ -176,7 +176,7 @@ impl Finite3DDimension {
         dim_size * dim_size * dim_size
     }
 
-    pub fn in_bounds(&self, p: Point3D<i32>) -> bool {
+    pub fn in_bounds(&self, p: &Point3D<i32>) -> bool {
         -(self.arm_size as i32) < *p.x() && *p.x() < self.arm_size as i32 &&
             -(self.arm_size as i32) < *p.y() && *p.y() < self.arm_size as i32 &&
             -(self.arm_size as i32) < *p.z() && *p.z() < self.arm_size as i32

@@ -55,7 +55,7 @@ impl Mapper {
         }
     }
 
-    pub fn unresolve(&self, mut point: Point3D<i32>) -> Option<usize> {
+    pub fn unresolve(&self, mut point: &Point3D<i32>) -> Option<usize> {
         if !self.dimension.in_bounds(point) {
             return None;
         }
@@ -82,7 +82,7 @@ impl Mapper {
         let p = Point3D::from((x, y, z));
         let mut p = p.map_all(|u_val| u_val as i32 - self.dimension.arm_size() as i32);
         p.apply_orientation(&self.orientation);
-        if self.dimension.in_bounds(p) {
+        if self.dimension.in_bounds(&p) {
             Some(p)
         } else {
             None
@@ -101,7 +101,7 @@ mod mapper_tests {
         let mapper = Mapper::new(dim);
         for i in 0..dim.size() {
             let point = mapper.resolve(i).expect("Save");
-            let resolved_index = mapper.unresolve(point).expect("Save");
+            let resolved_index = mapper.unresolve(&point).expect("Save");
             assert_eq!(i, resolved_index)
         }
     }
