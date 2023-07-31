@@ -22,8 +22,9 @@ macro_rules! num_funcs_for_point {
 
             /// Performs a clockwise 90 degree 2 dimensional rotation.
             fn rotate_2d(x: &mut $num_type, y: &mut $num_type) {
+                let x_copy = *x;
                 *x = -*y;
-                *y = *x;
+                *y = x_copy;
             }
 
             pub fn apply_orientation(&mut self, orientation: &Orientation) {
