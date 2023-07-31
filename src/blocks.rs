@@ -194,7 +194,3 @@ impl BlockArrangement {
         self.num_blocks += 1;
     }
 }
-
-//Todo: i need to figure out how to map 3D placements in one dimensions in such a way, that figuring
-// out new block placements is very cheap to compute.
-// Ideas: Space filling curves
