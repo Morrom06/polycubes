@@ -154,6 +154,48 @@ pub enum Axis3D {
     X, Y, Z
 }
 
+#[cfg(test)]
+mod point_tests {
+    use super::*;
+
+    #[test]
+    fn test_default_point() {
+        let p = Point3D::default();
+        assert_eq!(Point3D::new(0,0,0), p);
+    }
+
+    #[test]
+    fn test_mirroring() {
+        let mut p = Point3D::new(1,1,1);
+        p.mirror(Axis3D::X);
+        assert_eq!(Point3D::new(-1,1,1), p);
+        p.mirror(Axis3D::X);
+        assert_eq!(Point3D::new(1,1,1), p);
+        p.mirror(Axis3D::Y);
+        assert_eq!(Point3D::new(1,-1,1), p);
+        p.mirror(Axis3D::Y);
+        assert_eq!(Point3D::new(1,1,1), p);
+        p.mirror(Axis3D::Z);
+        assert_eq!(Point3D::new(1,1,-1), p);
+        p.mirror(Axis3D::Z);
+        assert_eq!(Point3D::new(1,1,1), p);
+
+        let mut p = Point3D::new(0,0,0);
+        p.mirror(Axis3D::X);
+        assert_eq!(Point3D::new(0,0,0), p);
+        p.mirror(Axis3D::X);
+        assert_eq!(Point3D::new(0,0,0), p);
+        p.mirror(Axis3D::Y);
+        assert_eq!(Point3D::new(0,0,0), p);
+        p.mirror(Axis3D::Y);
+        assert_eq!(Point3D::new(0,0,0), p);
+        p.mirror(Axis3D::Z);
+        assert_eq!(Point3D::new(0,0,0), p);
+        p.mirror(Axis3D::Z);
+        assert_eq!(Point3D::new(0,0,0), p);
+    }
+}
+
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 #[derive(CopyGetters)]
 pub struct Finite3DDimension {
