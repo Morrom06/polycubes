@@ -65,4 +65,15 @@ mod tests {
         let expected_len = 10;
         assert_eq!(expected_len, variations.len());
     }
+
+    #[test]
+    fn test_triple_l_variation() {
+        let mut block = BlockArrangement::new();
+        block.add_block_at(&Point3D::new(1,0,0)).expect("Save placement");
+        block.add_block_at(&Point3D::new(0,1,0)).expect("Save placement");
+        let variations = VariationGenerator::new(block)
+            .collect::<Vec<_>>();
+        let expected_len = 13;
+        assert_eq!(expected_len, variations.len());
+    }
 }
