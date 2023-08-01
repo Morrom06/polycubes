@@ -3,14 +3,16 @@ mod block_variation;
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use crate::mapper::{Mapper};
-use crate::orientation::{Orientation, OrientationIterator, RotationAmount};
+use crate::orientation::{Orientation, OrientationIterator};
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
 
 
 /// Describes an arrangement of blocks joined at their faces in a rotation and directionless manner.
 #[derive(Debug, Clone)]
 #[derive(CopyGetters)]
+#[derive(Serialize, Deserialize)]
 pub struct BlockArrangement {
     /// Represents the block_arrangement placement
     bitset: FixedBitSet,
@@ -88,7 +90,6 @@ impl BlockArrangement {
         if !self.mapper.dimension().in_bounds(point) {
             self.grow((self.num_blocks + 1) as usize)
         }
-        dbg!(&self);
         let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
         if !self.bitset[index] {
@@ -515,5 +516,20 @@ mod block_arrangement_tests {
         clone.set_orientation(o);
         assert_eq!(blocks, clone);
 
+    }
+
+    #[test]
+    fn test_serde() {
+        let block = BlockArrangement::new();
+        let config = bincode::config::standard();
+        let ser = bincode::serde::encode_to_vec(
+            &block,
+            config
+        ).expect("Expecting successful serialization");
+        let (new_block, _): (BlockArrangement, _) = bincode::serde::decode_from_slice(
+            &ser[..],
+            config
+        ).expect("Expecting successful deserialization.");
+        assert_eq!(block, new_block);
     }
 }

@@ -7,10 +7,14 @@ edition = "2021"
 
 [dependencies]
 
-fixedbitset = "0.4.2"
+fixedbitset = { version = "0.4.2", features = ["serde"]}
 
 getset = "0.1.2"
 
-rust_decimal = "1.31.0"
+rust_decimal = { version = "1.31.0", features = ["serde-str"]}
 
 strum = { version = "0.25", features = ["derive"] }
+
+serde = { version = "1.0.179", features = ["derive"]}
+
+bincode = { version = "2.0.0-rc.3", features = ["serde"] }

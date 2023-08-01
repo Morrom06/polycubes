@@ -1,11 +1,13 @@
 use std::array::IntoIter;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use getset::{CopyGetters, MutGetters, Setters};
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use crate::point::Axis3D;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Hash)]
 #[derive(CopyGetters, MutGetters, Setters)]
+#[derive(Serialize, Deserialize)]
 pub struct Orientation {
     #[getset(get_copy = "pub", get_mut = "pub", set = "pub")]
     x_rot: RotationAmount,
@@ -70,6 +72,7 @@ impl Orientation {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, EnumIter, Default, Hash)]
+#[derive(Serialize, Deserialize)]
 pub enum RotationAmount {
     #[default]
     Zero,

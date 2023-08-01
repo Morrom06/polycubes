@@ -2,10 +2,12 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, Sub};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
 #[derive(Debug, Default, Eq, PartialEq, Copy, Clone, Hash)]
 #[derive(Setters, MutGetters, Getters)]
+#[derive(Serialize, Deserialize)]
 pub struct Point3D<T> {
     #[getset(get = "pub", get_copy = "pub", set = "pub", get_mut = "pub")]
     x: T,
@@ -233,6 +235,7 @@ mod point_tests {
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 #[derive(CopyGetters)]
+#[derive(Serialize, Deserialize)]
 pub struct Finite3DDimension {
     #[get_copy = "pub"]
     arm_size: usize,
