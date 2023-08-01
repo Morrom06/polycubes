@@ -41,7 +41,7 @@ impl Add for Orientation {
 impl Orientation {
     /// Returns
     /// An [Orientation] that when added to the input will result in the default orientation.
-    pub fn inverse(&self) -> Self {
+    pub fn additive_complement(&self) -> Self {
         Self {
             x_mir: self.x_mir,
             y_mir: self.y_mir,
@@ -76,6 +76,15 @@ pub enum RotationAmount {
     Ninety,
     OneEighty,
     TwoSeventy,
+}
+
+impl RotationAmount {
+
+    /// Returns the inverse [RotationAmount] so that adding it it to self will result in
+    /// [RotationAmount::Zero].
+    pub fn inverse(&self) -> Self {
+        Self::Zero - *self
+    }
 }
 
 impl SubAssign for RotationAmount {

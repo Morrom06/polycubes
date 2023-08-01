@@ -59,7 +59,7 @@ impl Mapper {
         if !self.dimension.in_bounds(&point) {
             return None;
         }
-        point.apply_orientation(&self.orientation.inverse());
+        point.apply_inverse_orientation(&self.orientation);
 
         let u_point = point.map_all(|i_val| {
             (i_val + self.dimension.arm_size() as i32) as usize
@@ -99,8 +99,8 @@ mod mapper_tests {
         let dim = Finite3DDimension::new(arm_size);
         let mapper = Mapper::new(dim);
         for i in 0..dim.size() {
-            let point = mapper.resolve(i).expect("Save");
-            let resolved_index = mapper.unresolve(point).expect("Save");
+            let point = mapper.resolve(i).unwrap_or_else(|| panic!("Expected save resolving of index {i}"));
+            let resolved_index = mapper.unresolve(point).unwrap_or_else(|| panic!("Expected save unresolve of point {point}"));
             assert_eq!(i, resolved_index)
         }
     }

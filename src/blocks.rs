@@ -2,7 +2,7 @@ use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
 use rust_decimal::Decimal;
 use crate::mapper::{Mapper};
-use crate::orientation::{Orientation, OrientationIterator};
+use crate::orientation::{Orientation, OrientationIterator, RotationAmount};
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
 
 
@@ -27,34 +27,18 @@ impl PartialEq for BlockArrangement {
         OrientationIterator::default().any(|orientation| {
             mapper.set_orientation(orientation);
 
-            // Todo: remove debugging
-            let (equal_block_coordinates, unequal_block_coordinates): (Vec<_>, Vec<_>) = self.center_mass_iter().map(|mut p| {
+            let oriented_center_of_mass = {
+                let mut p = self.center_off_mass;
                 p.apply_orientation(&orientation);
-                (p, mapper.unresolve(p), self.mapper.unresolve(p), other.mapper.unresolve(p))
-            }
-            )
-                .partition(|(p, _, _, _)| {
-                    other.is_set(&p)
-                });
-            dbg!(
-                equal_block_coordinates,
-                unequal_block_coordinates,
-                self.center_mass_iter()
-                .map(|mut p| {
-                    p.apply_orientation(&orientation);
-                    p
-                })
-                .all(|p| other.is_set_relative_to_center_of_mass(&p)),
-                orientation
-            );
-
+                p
+            };
 
             self.num_blocks == other.num_blocks
-                && self.center_mass_iter()
-                .map(|mut p| {
-                    p.apply_orientation(&orientation);
-                    p
-                })
+                && self
+                .bitset.ones()
+                .map(|index| mapper.resolve(index)
+                    .expect("Expect save conversion since mapper dimension is equal."))
+                .map(|p| p - oriented_center_of_mass)
                 .all(|p| other.is_set_relative_to_center_of_mass(&p))
         })
     }
@@ -176,9 +160,8 @@ impl BlockArrangement {
     /// Returns an iterator over the coordinates of the blocks. The coordinates are offset
     /// by the center of mass.
     pub fn center_mass_iter(&self) -> impl Iterator<Item = Point3D<i32>> + '_ {
-        let oriented_offset = self.oriented_offset_center_of_mass();
         self.bitset.ones()
-            .map(move |index| self.mapper.resolve(index).expect("Expected save conversion") - oriented_offset)
+            .map(move |index| self.mapper.resolve(index).expect("Expected save conversion") - self.center_off_mass)
     }
 
     /// Calculates the density of the blocks.
@@ -239,9 +222,7 @@ impl BlockArrangement {
 
 
     pub fn is_set_relative_to_center_of_mass(&self, point: &Point3D<i32>) -> bool {
-        self.mapper.unresolve(*point + self.center_off_mass)
-            .map(|index| self.bitset[index])
-            .unwrap_or_default()
+        self.is_set(&(*point + self.center_off_mass))
     }
 }
 
@@ -284,6 +265,82 @@ mod block_arrangement_tests {
     }
 
     #[test]
+    fn test_block_itr() {
+        let mut blocks = BlockArrangement::new();
+        let p = Point3D::new(1,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(2,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,0,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        blocks.block_iter()
+            .for_each(|p| assert!(blocks.is_set(&p)))
+    }
+
+    #[test]
+    fn test_is_set_relative_to_center_of_mass() {
+        let mut blocks = BlockArrangement::new();
+        let p = Point3D::new(1,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(2,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,0,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        blocks.center_mass_iter()
+            .for_each(|p| assert!(blocks.is_set_relative_to_center_of_mass(&p)))
+    }
+
+    #[test]
+    fn test_block_itr_with_orientation() {
+        let mut blocks = BlockArrangement::new();
+        let p = Point3D::new(1,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(2,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,0,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        blocks.orientation_mut(|o| {
+            o.mirror(Axis3D::X);
+            o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        });
+        blocks.block_iter()
+            .for_each(|p| assert!(blocks.is_set(&p)))
+    }
+
+    #[test]
+    fn test_is_set_relative_to_center_of_mass_with_orientation() {
+        let mut blocks = BlockArrangement::new();
+        let p = Point3D::new(1,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(2,0,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,0,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,-1);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        let p = Point3D::new(0,-1,0);
+        blocks.add_block_at(&p).expect("Checked coordinates.");
+        blocks.orientation_mut(|o| {
+            o.mirror(Axis3D::X);
+            o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        });
+        blocks.center_mass_iter()
+            .for_each(|p| assert!(blocks.is_set_relative_to_center_of_mass(&p)))
+    }
+
+    #[test]
     fn test_x_mirroring() {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
@@ -296,7 +353,7 @@ mod block_arrangement_tests {
     }
 
     #[test]
-    fn test_eq_with_rotations() {
+    fn test_eq_with_every_orientation_variant() {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
@@ -425,5 +482,32 @@ mod block_arrangement_tests {
         o.rotate(Axis3D::Z, RotationAmount::Ninety);
         clone.set_orientation(o);
         assert_eq!(blocks, clone);
+    }
+
+    #[test]
+    fn test_multiple_rotations_xy() {
+        let mut blocks = BlockArrangement::new();
+        blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
+        let mut clone = blocks.clone();
+        let mut o = Orientation::default();
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        dbg!(blocks.center_mass_iter().collect::<Vec<_>>());
+        dbg!(clone.center_mass_iter().collect::<Vec<_>>());
+        assert_eq!(blocks, clone, "Blocks do not equal.");
+        o.rotate(Axis3D::X, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+        o.rotate(Axis3D::Y, RotationAmount::Ninety);
+        clone.set_orientation(o);
+        assert_eq!(blocks, clone);
+
     }
 }
