@@ -1,10 +1,12 @@
 use std::usize;
 use getset::{CopyGetters, MutGetters, Setters};
+use serde::{Deserialize, Serialize};
 use crate::orientation::Orientation;
 use crate::point::{Finite3DDimension, Point3D};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[derive(CopyGetters, Setters, MutGetters)]
+#[derive(Serialize, Deserialize)]
 pub struct Mapper {
     #[getset(get_copy = "pub", set = "pub")]
     dimension: Finite3DDimension,

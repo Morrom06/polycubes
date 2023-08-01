@@ -3,14 +3,16 @@ mod block_variation;
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use crate::mapper::{Mapper};
-use crate::orientation::{Orientation, OrientationIterator, RotationAmount};
+use crate::orientation::{Orientation, OrientationIterator};
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
 
 
 /// Describes an arrangement of blocks joined at their faces in a rotation and directionless manner.
 #[derive(Debug, Clone)]
 #[derive(CopyGetters)]
+#[derive(Serialize, Deserialize)]
 pub struct BlockArrangement {
     /// Represents the block_arrangement placement
     bitset: FixedBitSet,
