@@ -1,3 +1,5 @@
+mod block_variation;
+
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
 use rust_decimal::Decimal;
