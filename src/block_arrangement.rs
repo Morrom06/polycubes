@@ -517,4 +517,19 @@ mod block_arrangement_tests {
         assert_eq!(blocks, clone);
 
     }
+
+    #[test]
+    fn test_serde() {
+        let block = BlockArrangement::new();
+        let config = bincode::config::standard();
+        let ser = bincode::serde::encode_to_vec(
+            &block,
+            config
+        ).expect("Expecting successful serialization");
+        let (new_block, _): (BlockArrangement, _) = bincode::serde::decode_from_slice(
+            &ser[..],
+            config
+        ).expect("Expecting successful deserialization.");
+        assert_eq!(block, new_block);
+    }
 }
