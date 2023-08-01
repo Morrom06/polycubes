@@ -249,8 +249,12 @@ impl Finite3DDimension {
 
     /// The number of points contained in this dimension.
     pub fn size(&self) -> usize {
-        let dim_size = self.arm_size * 2;
+        let dim_size = self.arm_size * 2 + 1;
         dim_size * dim_size * dim_size
+    }
+
+    pub fn axis_len(&self) -> usize {
+        self.arm_size * 2 + 1
     }
 
     pub fn in_bounds(&self, p: &Point3D<i32>) -> bool {

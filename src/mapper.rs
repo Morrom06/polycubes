@@ -66,13 +66,13 @@ impl Mapper {
         });
 
         // Since size only specifies one direction awy from origin
-        let width_height_depth = self.dimension.arm_size() * 2;
+        let width_height_depth = self.dimension().axis_len();
 
         return Some(u_point.x() + width_height_depth * (u_point.y() + width_height_depth * u_point.z()));
     }
 
     pub fn resolve(&self, index: usize) -> Option<Point3D<i32>> {
-        let width_height_depth = self.dimension.arm_size() * 2;
+        let width_height_depth = self.dimension().axis_len();
 
         let z = index / (width_height_depth * width_height_depth);
         let y = (index / width_height_depth) % width_height_depth;
@@ -101,7 +101,7 @@ mod mapper_tests {
         for i in 0..dim.size() {
             let point = mapper.resolve(i).unwrap_or_else(|| panic!("Expected save resolving of index {i}"));
             let resolved_index = mapper.unresolve(point).unwrap_or_else(|| panic!("Expected save unresolve of point {point}"));
-            assert_eq!(i, resolved_index)
+            assert_eq!(i, resolved_index, "The expected index of {i} was not converted back, but got {resolved_index} and point {point}")
         }
     }
 }

@@ -74,9 +74,10 @@ impl BlockArrangement {
         if !self.has_neighbors(point) {
             return Err(PlacementError::NotAdjacentToBlock);
         }
-        if self.num_blocks + 1 > self.mapper.dimension().arm_size() as u8 {
+        if !self.mapper.dimension().in_bounds(point) {
             self.grow((self.num_blocks + 1) as usize)
         }
+        dbg!(&self);
         let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
         if !self.bitset[index] {
@@ -236,9 +237,12 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         assert_eq!(1, blocks.num_blocks());
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
+        dbg!(blocks.block_iter().collect::<Vec<_>>());
         assert_eq!(2, blocks.num_blocks());
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
         assert_eq!(3, blocks.num_blocks());
+        dbg!(blocks.block_iter().collect::<Vec<_>>());
+        assert!(blocks.has_neighbors(&Point3D::new(2,0,0)));
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
         assert_eq!(3, blocks.num_blocks());
     }
