@@ -53,6 +53,15 @@ pub enum PlacementError {
 
 impl BlockArrangement {
 
+    pub const NEIGHBOR_OFFSETS: [Point3D<i32>; 6] = [
+        Point3D::new(0, 0, -1),
+        Point3D::new(0, 0, 1),
+        Point3D::new(0, -1, 0),
+        Point3D::new(0, 1, 0),
+        Point3D::new(-1, 0, 0),
+        Point3D::new(1, 0, 0),
+    ];
+
     /// Creates a block_arrangement arrangement with one block_arrangement at the origin.
     pub fn new() -> Self {
         Self::with_capacity(1)
@@ -97,18 +106,9 @@ impl BlockArrangement {
         new_block.num_blocks = self.num_blocks;
         *self = new_block;
     }
-
     /// Returns true if the point has any neighbor blocks.
     pub fn has_neighbors(&self, point: &Point3D<i32>) -> bool {
-        const NEIGHBOR_OFFSETS: [Point3D<i32>; 6] = [
-            Point3D::new(0, 0, -1),
-            Point3D::new(0, 0, 1),
-            Point3D::new(0, -1, 0),
-            Point3D::new(0, 1, 0),
-            Point3D::new(-1, 0, 0),
-            Point3D::new(1, 0, 0),
-        ];
-        NEIGHBOR_OFFSETS.iter().cloned()
+        Self::NEIGHBOR_OFFSETS.iter().cloned()
             .map(|offset| offset + *point)
             // Resolves the point to the corresponding index and filters only in bound indices.
             .filter_map(|coordinate| self.mapper.unresolve(coordinate))
