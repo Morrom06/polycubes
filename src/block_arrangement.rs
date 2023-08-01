@@ -90,7 +90,6 @@ impl BlockArrangement {
         if !self.mapper.dimension().in_bounds(point) {
             self.grow((self.num_blocks + 1) as usize)
         }
-        dbg!(&self);
         let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
         if !self.bitset[index] {
