@@ -254,8 +254,26 @@ impl Finite3DDimension {
     }
 
     pub fn in_bounds(&self, p: &Point3D<i32>) -> bool {
-        -(self.arm_size as i32) < *p.x() && *p.x() < self.arm_size as i32 &&
-            -(self.arm_size as i32) < *p.y() && *p.y() < self.arm_size as i32 &&
-            -(self.arm_size as i32) < *p.z() && *p.z() < self.arm_size as i32
+        -(self.arm_size as i32) <= *p.x() && *p.x() <= self.arm_size as i32 &&
+            -(self.arm_size as i32) <= *p.y() && *p.y() <= self.arm_size as i32 &&
+            -(self.arm_size as i32) <= *p.z() && *p.z() <= self.arm_size as i32
+    }
+}
+
+#[cfg(test)]
+mod dimension_tests {
+    use super::*;
+
+    #[test]
+    fn test_in_bounds() {
+        let dim = Finite3DDimension::new(3);
+        for x in -3..4 {
+            for y in -3..4 {
+                for z in -3..4 {
+                    let p = Point3D::new(x,y,z);
+                    assert!(dim.in_bounds(&p), "In bounds check failed at point {p}")
+                }
+            }
+        }
     }
 }
