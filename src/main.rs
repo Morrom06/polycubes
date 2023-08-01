@@ -1,4 +1,4 @@
-mod blocks;
+mod block_arrangement;
 mod mapper;
 mod point;
 mod block_hash;
@@ -15,3 +15,4 @@ fn main() {
     println!("The number of arrangements is {}", "todo");
     todo!()
 }
+

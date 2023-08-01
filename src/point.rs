@@ -4,7 +4,7 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rust_decimal::Decimal;
 use strum::EnumIter;
 
-#[derive(Debug, Default, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Default, Eq, PartialEq, Copy, Clone, Hash)]
 #[derive(Setters, MutGetters, Getters)]
 pub struct Point3D<T> {
     #[getset(get = "pub", get_copy = "pub", set = "pub", get_mut = "pub")]

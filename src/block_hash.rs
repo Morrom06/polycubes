@@ -1,6 +1,6 @@
 use getset::CopyGetters;
 use rust_decimal::{Decimal, RoundingStrategy};
-use crate::blocks::BlockArrangement;
+use crate::block_arrangement::BlockArrangement;
 
 /// A hash like value for a [BlockArrangement].
 /// The values aim to uniquely identify a Block arrangement independent of any mirroring or
