@@ -42,6 +42,24 @@ macro_rules! num_funcs_for_point {
                 self.rotate(Axis3D::Z, orientation.z_rot());
             }
 
+            /// Applies the orientation inverse so that if it was previously applied
+            /// it will no be reversed.
+            pub fn apply_inverse_orientation(&mut self, orientation: &Orientation) {
+                self.rotate(Axis3D::Z, orientation.z_rot().inverse());
+                self.rotate(Axis3D::Y, orientation.y_rot().inverse());
+                self.rotate(Axis3D::X, orientation.x_rot().inverse());
+
+                if orientation.z_mir() {
+                    self.mirror(Axis3D::Z)
+                }
+                if orientation.y_mir() {
+                    self.mirror(Axis3D::Y)
+                }
+                if orientation.x_mir() {
+                    self.mirror(Axis3D::X)
+                }
+            }
+
             pub fn rotate(&mut self, axis: Axis3D, amount: RotationAmount) {
                 let rotations = match amount {
                     RotationAmount::Zero => {return;}
@@ -156,6 +174,7 @@ pub enum Axis3D {
 
 #[cfg(test)]
 mod point_tests {
+    use crate::orientation::RotationAmount::TwoSeventy;
     use super::*;
 
     #[test]
@@ -194,6 +213,22 @@ mod point_tests {
         p.mirror(Axis3D::Z);
         assert_eq!(Point3D::new(0,0,0), p);
     }
+
+    #[test]
+    fn test_apply_inverse() {
+        use crate::orientation::RotationAmount::*;
+        let p = Point3D::new(1,2,3);
+        let mut p_clone = p;
+        let mut orientation = Orientation::default();
+        orientation
+            .set_x_mir(true)
+            .set_y_mir(true)
+            .set_x_rot(Ninety)
+            .set_z_rot(TwoSeventy);
+        p_clone.apply_orientation(&orientation);
+        p_clone.apply_inverse_orientation(&orientation);
+        assert_eq!(p, p_clone)
+    }
 }
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
@@ -214,13 +249,35 @@ impl Finite3DDimension {
 
     /// The number of points contained in this dimension.
     pub fn size(&self) -> usize {
-        let dim_size = self.arm_size * 2;
+        let dim_size = self.arm_size * 2 + 1;
         dim_size * dim_size * dim_size
     }
 
+    pub fn axis_len(&self) -> usize {
+        self.arm_size * 2 + 1
+    }
+
     pub fn in_bounds(&self, p: &Point3D<i32>) -> bool {
-        -(self.arm_size as i32) < *p.x() && *p.x() < self.arm_size as i32 &&
-            -(self.arm_size as i32) < *p.y() && *p.y() < self.arm_size as i32 &&
-            -(self.arm_size as i32) < *p.z() && *p.z() < self.arm_size as i32
+        -(self.arm_size as i32) <= *p.x() && *p.x() <= self.arm_size as i32 &&
+            -(self.arm_size as i32) <= *p.y() && *p.y() <= self.arm_size as i32 &&
+            -(self.arm_size as i32) <= *p.z() && *p.z() <= self.arm_size as i32
+    }
+}
+
+#[cfg(test)]
+mod dimension_tests {
+    use super::*;
+
+    #[test]
+    fn test_in_bounds() {
+        let dim = Finite3DDimension::new(3);
+        for x in -3..4 {
+            for y in -3..4 {
+                for z in -3..4 {
+                    let p = Point3D::new(x,y,z);
+                    assert!(dim.in_bounds(&p), "In bounds check failed at point {p}")
+                }
+            }
+        }
     }
 }
