@@ -123,17 +123,11 @@ impl BlockArrangement {
             Point3D::new(-1, 0, 0),
             Point3D::new(1, 0, 0),
         ];
-        NEIGHBOR_OFFSETS.iter().cloned().map(|offset| offset + *point)
-            .map(|coordinate| self.global_to_this(coordinate))
+        NEIGHBOR_OFFSETS.iter().cloned()
+            .map(|offset| offset + *point)
             // Resolves the point to the corresponding index and filters only in bound indices.
             .filter_map(|coordinate| self.mapper.unresolve(coordinate))
             .any(|i| self.bitset[i])
-    }
-
-    /// Applies the inverse of the current mapper orientation to the [Point3D<i32>].
-    fn global_to_this(&self, mut point: Point3D<i32>) -> Point3D<i32> {
-        point.apply_orientation(&self.mapper.orientation().inverse());
-        point
     }
 
     /// Updates the center off mass.
@@ -141,18 +135,20 @@ impl BlockArrangement {
         self.center_off_mass = self.center_of_mass();
     }
 
-    pub fn orientation_mut(&mut self) -> &mut Orientation {
-        self.mapper.orientation_mut()
-    }
-
     pub fn set_orientation(&mut self, orientation: Orientation) {
         self.mapper.set_orientation(orientation);
+        self.update_center_of_mass();
+    }
+
+    pub fn orientation_mut<F: FnOnce(&mut Orientation)>(&mut self, f: F) {
+        f(self.mapper.orientation_mut());
+        self.update_center_of_mass();
     }
 
     /// Calculates the center of mass of the collection of blocks.
     /// If there are no blocks no center can be found.
     pub fn center_of_mass(&self) -> Point3D<i32> {
-        self.center_mass_iter()
+        self.block_iter()
             .map(|p| (p, 1))
             .reduce(|a, b| {
             (a.0 + b.0, a.1 + b.1)
@@ -172,6 +168,11 @@ impl BlockArrangement {
             .map(|(sum_p, count)| sum_p.map_all(|v| v / count))
     }
 
+    pub fn block_iter(&self) -> impl Iterator<Item = Point3D<i32>> + '_ {
+        self.bitset.ones()
+            .map(move |index| self.mapper.resolve(index).expect("Expected save conversion"))
+    }
+
     /// Returns an iterator over the coordinates of the blocks. The coordinates are offset
     /// by the center of mass.
     pub fn center_mass_iter(&self) -> impl Iterator<Item = Point3D<i32>> + '_ {
@@ -181,7 +182,7 @@ impl BlockArrangement {
     }
 
     /// Calculates the density of the blocks.
-    /// It is the average distance to the origin.
+    /// It is the average distance to the center of mass.
     pub fn density(&self) -> Decimal {
         let sum: Decimal = self.center_mass_iter()
             .map(|p| p.distance_to_origin())
@@ -201,7 +202,8 @@ impl BlockArrangement {
     }
 
     /// Calculates the average distance of the block to the specified axis.
-    /// The lower the value ther stronger the alignment.
+    /// The lower the value the stronger the alignment.
+    /// The Origin is set to the center of mass.
     fn axis_alignment(&self, axis: Axis3D) -> Decimal {
         let sum: Decimal = self.center_mass_iter()
             .map(|point| {
@@ -237,7 +239,7 @@ impl BlockArrangement {
 
 
     pub fn is_set_relative_to_center_of_mass(&self, point: &Point3D<i32>) -> bool {
-        self.mapper.unresolve(*point + self.oriented_offset_center_of_mass())
+        self.mapper.unresolve(*point + self.center_off_mass)
             .map(|index| self.bitset[index])
             .unwrap_or_default()
     }
@@ -286,7 +288,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
-        blocks.orientation_mut().mirror(Axis3D::X);
+        blocks.orientation_mut(|o| o.mirror(Axis3D::X));
         assert!(!blocks.is_set(&Point3D::new(1,0,0)));
         assert!(blocks.is_set(&Point3D::new(0,0,0)));
         assert!(blocks.is_set(&Point3D::new(-1,0,0)));
@@ -298,6 +300,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -312,6 +315,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -326,6 +330,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(0, 1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(0, 2,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(0,3,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(1, 3,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(0, 3,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -340,6 +345,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(0,0, 1)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(0,0, 2)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(0,0, 3)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(1,0, 3)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(0,1, 3)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -354,6 +360,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -377,6 +384,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
@@ -400,6 +408,7 @@ mod block_arrangement_tests {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(2,0,0)).expect("Checked coordinates.");
+        blocks.add_block_at(&Point3D::new(3,0,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,1,0)).expect("Checked coordinates.");
         blocks.add_block_at(&Point3D::new(3,0,1)).expect("Checked coordinates.");
         let mut clone = blocks.clone();
