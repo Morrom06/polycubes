@@ -10,7 +10,7 @@ use crate::point::{Axis3D, Finite3DDimension, Point3D};
 #[derive(Debug, Clone)]
 #[derive(CopyGetters)]
 pub struct BlockArrangement {
-    /// Represents the block placement
+    /// Represents the block_arrangement placement
     bitset: FixedBitSet,
     /// The number of blocks in this arrangement.
     /// Is always > 0
@@ -53,7 +53,7 @@ pub enum PlacementError {
 
 impl BlockArrangement {
 
-    /// Creates a block arrangement with one block at the origin.
+    /// Creates a block_arrangement arrangement with one block_arrangement at the origin.
     pub fn new() -> Self {
         Self::with_capacity(1)
     }
@@ -138,7 +138,7 @@ impl BlockArrangement {
             .reduce(|a, b| {
             (a.0 + b.0, a.1 + b.1)
         }).map(|(sum_p, count)| sum_p.map_all(|v| v / count))
-            .expect("Save call since there is always at least one block.")
+            .expect("Save call since there is always at least one block_arrangement.")
     }
 
     /// Calculates the center of mass of the collection of blocks.
@@ -185,7 +185,7 @@ impl BlockArrangement {
         ]
     }
 
-    /// Calculates the average distance of the block to the specified axis.
+    /// Calculates the average distance of the block_arrangement to the specified axis.
     /// The lower the value the stronger the alignment.
     /// The Origin is set to the center of mass.
     fn axis_alignment(&self, axis: Axis3D) -> Decimal {
@@ -214,7 +214,7 @@ impl BlockArrangement {
         oriented_center
     }
 
-    /// Checks if a block at the point is set.
+    /// Checks if a block_arrangement at the point is set.
     pub fn is_set(&self, point: &Point3D<i32>) -> bool {
         self.mapper.unresolve(*point)
             .map(|index| self.bitset[index])
