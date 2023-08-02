@@ -144,18 +144,6 @@ impl BlockArrangement {
             .expect("Save call since there is always at least one block_arrangement.")
     }
 
-    /// Calculates the center of mass of the collection of blocks.
-    /// If there are no blocks no center can be found.
-    pub fn precise_center_of_mass(&self) -> Option<Point3D<f64>> {
-        self.bitset.ones()
-            .map(|i| {
-                self.mapper.resolve(i).unwrap_or_else(|| panic!("An expected save index of {i} is out of bounds."))
-            })
-            .map(|coordinate| (coordinate.map_all(|i_val| i_val as f64), 1f64))
-            .reduce(|a, b| {(a.0 + b.0, a.1 + b.1)})
-            .map(|(sum_p, count)| sum_p.map_all(|v| v / count))
-    }
-
     pub fn block_iter(&self) -> impl Iterator<Item = Point3D<i32>> + '_ {
         self.bitset.ones()
             .map(move |index| self.mapper.resolve(index).expect("Expected save conversion"))
