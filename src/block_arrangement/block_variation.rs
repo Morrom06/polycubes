@@ -39,6 +39,7 @@ impl Iterator for VariationGenerator {
 
 #[cfg(test)]
 mod tests {
+    use crate::block_hash::BlockHash;
     use super::*;
 
     #[test]
@@ -48,12 +49,7 @@ mod tests {
             .collect::<Vec<_>>();
         let expected_len = 6;
         assert_eq!(expected_len, variations.len());
-        // This is only correct because there is only one combination of 2 blocks.
-        for i in 0..6 {
-            for j in i..6 {
-                assert_eq!(variations[i], variations[j])
-            }
-        }
+        assert_eq!(1, variations.into_iter().collect::<HashSet<_>>().len())
     }
 
     #[test]
@@ -61,9 +57,22 @@ mod tests {
         let mut block = BlockArrangement::new();
         block.add_block_at(&Point3D::new(1,0,0)).expect("Save placement");
         let variations = VariationGenerator::new(block)
+            .map(|b| (BlockHash::from(&b), b))
             .collect::<Vec<_>>();
         let expected_len = 10;
         assert_eq!(expected_len, variations.len());
+        let set = variations.into_iter()
+            .map(|t|t.1)
+            .collect::<HashSet<_>>();
+        dbg!(
+            &set.iter()
+                .map(|ba| (
+                    ba.block_iter().collect::<Vec<_>>(),
+                    ba.center_mass_iter().collect::<Vec<_>>(),
+                    BlockHash::from(ba)))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(2, set.len(), "Number of unique shapes does not match expected amount")
     }
 
     #[test]
