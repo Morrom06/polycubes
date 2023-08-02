@@ -363,6 +363,35 @@ mod block_arrangement_tests {
     }
 
     #[test]
+    fn test_eq_of_two_blocks_in_every_congifiguration() {
+        let mut arrangements = Vec::with_capacity(6);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(1, 0, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 1, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 0, 1)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(-1, 0, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, -1, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 0, -1)).expect("Checked coordinates.");
+        arrangements.push(arr);
+
+        for i in 0..(arrangements.len() - 1) {
+            for j in i..arrangements.len() {
+                assert_eq!(arrangements[i], arrangements[j]);
+            }
+        }
+    }
+
+    #[test]
     fn test_eq_with_x_mir() {
         let mut blocks = BlockArrangement::new();
         blocks.add_block_at(&Point3D::new(1,0,0)).expect("Checked coordinates.");
@@ -519,5 +548,17 @@ mod block_arrangement_tests {
             config
         ).expect("Expecting successful deserialization.");
         assert_eq!(block, new_block);
+    }
+
+    #[test]
+    fn test_hashing() {
+        let mut block_a = BlockArrangement::new();
+        block_a.add_block_at(&Point3D::new(1,0,0)).expect("Save");
+        let mut block_b = BlockArrangement::new();
+        block_b.add_block_at(&Point3D::new(0,1,0)).expect("Save");
+        assert_eq!(&block_a, &block_b);
+        let mut hash_set = HashSet::new();
+        assert!(hash_set.insert(block_a));
+        assert!(!hash_set.insert(block_b));
     }
 }
