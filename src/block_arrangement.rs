@@ -1,9 +1,12 @@
 pub mod block_variation;
 
+use std::hash::{Hash, Hasher};
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
+use crate::block_hash::BlockHash;
 use crate::mapper::{Mapper};
 use crate::orientation::{Orientation, OrientationIterator};
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
@@ -23,6 +26,12 @@ pub struct BlockArrangement {
     /// Offset from origin
     center_off_mass: Point3D<i32>,
     mapper: Mapper,
+}
+
+impl Hash for BlockArrangement {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        BlockHash::from(self).hash(state)
+    }
 }
 
 impl PartialEq for BlockArrangement {
@@ -137,23 +146,16 @@ impl BlockArrangement {
     /// If there are no blocks no center can be found.
     pub fn center_of_mass(&self) -> Point3D<i32> {
         self.block_iter()
-            .map(|p| (p, 1))
+            .map(|p| p.map_all(Decimal::from))
+            .map(|p| (p, Decimal::ONE))
             .reduce(|a, b| {
             (a.0 + b.0, a.1 + b.1)
         }).map(|(sum_p, count)| sum_p.map_all(|v| v / count))
+            .map(|dec_p| dec_p.map_all(|v| {
+                let rounded = v.round_dp_with_strategy(0, RoundingStrategy::MidpointAwayFromZero);
+                rounded.to_i32().expect("No div by zero or out of bounds expected.")
+            }))
             .expect("Save call since there is always at least one block_arrangement.")
-    }
-
-    /// Calculates the center of mass of the collection of blocks.
-    /// If there are no blocks no center can be found.
-    pub fn precise_center_of_mass(&self) -> Option<Point3D<f64>> {
-        self.bitset.ones()
-            .map(|i| {
-                self.mapper.resolve(i).unwrap_or_else(|| panic!("An expected save index of {i} is out of bounds."))
-            })
-            .map(|coordinate| (coordinate.map_all(|i_val| i_val as f64), 1f64))
-            .reduce(|a, b| {(a.0 + b.0, a.1 + b.1)})
-            .map(|(sum_p, count)| sum_p.map_all(|v| v / count))
     }
 
     pub fn block_iter(&self) -> impl Iterator<Item = Point3D<i32>> + '_ {
@@ -232,6 +234,7 @@ impl BlockArrangement {
 
 #[cfg(test)]
 mod block_arrangement_tests {
+    use std::collections::HashSet;
     use crate::orientation::RotationAmount;
     use super::*;
 
@@ -372,6 +375,35 @@ mod block_arrangement_tests {
             clone.set_orientation(orientation);
             assert_eq!(blocks, clone, "Blocks do not equal at index {index} with orientation {orientation:?}");
         })
+    }
+
+    #[test]
+    fn test_eq_of_two_blocks_in_every_congifiguration() {
+        let mut arrangements = Vec::with_capacity(6);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(1, 0, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 1, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 0, 1)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(-1, 0, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, -1, 0)).expect("Checked coordinates.");
+        arrangements.push(arr);
+        let mut arr = BlockArrangement::new();
+        arr.add_block_at(&Point3D::new(0, 0, -1)).expect("Checked coordinates.");
+        arrangements.push(arr);
+
+        for i in 0..(arrangements.len() - 1) {
+            for j in i..arrangements.len() {
+                assert_eq!(arrangements[i], arrangements[j]);
+            }
+        }
     }
 
     #[test]
@@ -531,5 +563,17 @@ mod block_arrangement_tests {
             config
         ).expect("Expecting successful deserialization.");
         assert_eq!(block, new_block);
+    }
+
+    #[test]
+    fn test_hashing() {
+        let mut block_a = BlockArrangement::new();
+        block_a.add_block_at(&Point3D::new(1,0,0)).expect("Save");
+        let mut block_b = BlockArrangement::new();
+        block_b.add_block_at(&Point3D::new(0,1,0)).expect("Save");
+        assert_eq!(&block_a, &block_b);
+        let mut hash_set = HashSet::new();
+        assert!(hash_set.insert(block_a));
+        assert!(!hash_set.insert(block_b));
     }
 }
