@@ -1,4 +1,4 @@
-mod block_variation;
+pub mod block_variation;
 
 use fixedbitset::FixedBitSet;
 use getset::CopyGetters;
