@@ -7,6 +7,7 @@ use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use crate::block_hash::BlockHash;
+use strum::IntoEnumIterator;
 use crate::mapper::{Mapper};
 use crate::orientation::{Orientation, OrientationIterator};
 use crate::point::{Axis3D, Finite3DDimension, Point3D};
@@ -26,6 +27,13 @@ pub struct BlockArrangement {
     /// Offset from origin
     center_off_mass: Point3D<i32>,
     mapper: Mapper,
+}
+
+impl Default for BlockArrangement {
+    /// Creates a block_arrangement arrangement with one block_arrangement at the origin.
+    fn default() -> Self {
+        Self::with_capacity(Finite3DDimension::default())
+    }
 }
 
 impl Hash for BlockArrangement {
@@ -75,18 +83,16 @@ impl BlockArrangement {
         Point3D::new(1, 0, 0),
     ];
 
-    /// Creates a block_arrangement arrangement with one block_arrangement at the origin.
     pub fn new() -> Self {
-        Self::with_capacity(1)
+        Self::default()
     }
 
-    pub fn with_capacity(cap: usize) -> Self {
-        let dim = Finite3DDimension::new(cap);
+    pub fn with_capacity(dim: Finite3DDimension) -> Self {
         let mut arr = Self {
-            bitset: FixedBitSet::with_capacity(dim.size()),
+            bitset: FixedBitSet::with_capacity(dim.size() as usize),
             num_blocks: 0,
             center_off_mass: Point3D::default(),
-            mapper: Mapper::new(dim)
+            mapper: Mapper::new(dim),
         };
         arr.set_origin_block();
         arr
@@ -96,8 +102,15 @@ impl BlockArrangement {
         if !self.has_neighbors(point) {
             return Err(PlacementError::NotAdjacentToBlock);
         }
-        if !self.mapper.dimension().in_bounds(point) {
-            self.grow((self.num_blocks + 1) as usize)
+        for axis in Axis3D::iter() {
+            if !self.mapper.dimension().dim_in_bounds(point, axis) {
+                let positive_enlargement = *match axis {
+                    Axis3D::X => {point.x()}
+                    Axis3D::Y => {point.y()}
+                    Axis3D::Z => {point.z()}
+                } > 0;
+                self.grow(axis, positive_enlargement)
+            }
         }
         let index = self.mapper.unresolve(*point)
             .unwrap_or_else(|| panic!("Expected a save resolve from point {point} but was unsafe."));
@@ -109,8 +122,30 @@ impl BlockArrangement {
         Ok(())
     }
 
-    fn grow(&mut self, cap: usize) {
-        let mut new_block = BlockArrangement::with_capacity(cap);
+    fn grow(&mut self, axis: Axis3D, positive: bool) {
+        use Axis3D::*;
+        let mut dim_clone = self.mapper.dimension();
+        match (axis, positive) {
+            (X, true) => {
+                dim_clone.set_x_pos((dim_clone.x_pos() + 1) * 2)
+            }
+            (X, false) => {
+                dim_clone.set_x_neg((dim_clone.x_neg() + 1) * 2)
+            }
+            (Y, true) => {
+                dim_clone.set_y_pos((dim_clone.y_pos() + 1) * 2)
+            }
+            (Y, false) => {
+                dim_clone.set_y_neg((dim_clone.y_neg() + 1) * 2)
+            }
+            (Z, true) => {
+                dim_clone.set_z_pos((dim_clone.z_pos() + 1) * 2)
+            }
+            (Z, false) => {
+                dim_clone.set_z_neg((dim_clone.z_neg() + 1) * 2)
+            }
+        };
+        let mut new_block = BlockArrangement::with_capacity(dim_clone);
         self.bitset.ones()
             .map(|index| self.mapper.resolve(index).expect("Save mappings expected"))
             .map(|coordinate| new_block.mapper.unresolve(coordinate).expect("Save mapping expected since it of larger capacity"))
@@ -235,8 +270,14 @@ impl BlockArrangement {
 #[cfg(test)]
 mod block_arrangement_tests {
     use std::collections::HashSet;
+    use crate::orientation::Orientation;
     use crate::orientation::RotationAmount;
     use super::*;
+
+    #[test]
+    fn test_creation() {
+        let _block = BlockArrangement::new();
+    }
 
     #[test]
     fn test_num_blocks() {
@@ -326,7 +367,7 @@ mod block_arrangement_tests {
             o.rotate(Axis3D::Y, RotationAmount::Ninety);
         });
         blocks.block_iter()
-            .for_each(|p| assert!(blocks.is_set(&p)))
+            .for_each(|p| assert!(blocks.is_set(&p), "The block at {p} expected to be set, was not"))
     }
 
     #[test]
@@ -378,7 +419,7 @@ mod block_arrangement_tests {
     }
 
     #[test]
-    fn test_eq_of_two_blocks_in_every_congifiguration() {
+    fn test_eq_of_two_blocks_in_every_configuration() {
         let mut arrangements = Vec::with_capacity(6);
         let mut arr = BlockArrangement::new();
         arr.add_block_at(&Point3D::new(1, 0, 0)).expect("Checked coordinates.");
