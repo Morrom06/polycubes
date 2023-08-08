@@ -17,15 +17,15 @@ use crate::block_hash::BlockHash;
 fn main() {
     let mut args = env::args();
     let _program_path = args.next();
-    // let n: usize = args.next()
-    //     .map(|s| {
-    //         println!("{s}");
-    //         s.parse()
-    //     })
-    //     .expect("Expected at least one numeric arguments")
-    //     .expect("The argument has to be a valid number");
-    // let num_unique_shapes: usize = generate(n).last().unwrap().len();
-    // println!("The number of unique arrangements of {n} blocks is {num_unique_shapes}");
+    let n: usize = args.next()
+        .map(|s| {
+            println!("{s}");
+            s.parse()
+        })
+        .expect("Expected at least one numeric arguments")
+        .expect("The argument has to be a valid number");
+    let num_unique_shapes: usize = generate(n).last().unwrap().len();
+    println!("The number of unique arrangements of {n} blocks is {num_unique_shapes}");
 }
 
 fn generate(n: usize) -> Vec<BTreeMap<BlockHash, BlockArrangement>> {
