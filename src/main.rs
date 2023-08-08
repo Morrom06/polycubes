@@ -5,7 +5,7 @@ mod block_hash;
 mod orientation;
 
 use std::collections::BTreeMap;
-use std::{env, io, mem};
+use std::{env, io};
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Error, ErrorKind, Write};
 use crate::block_arrangement::block_variation::VariationGenerator;

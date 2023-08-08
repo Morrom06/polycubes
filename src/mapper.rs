@@ -14,40 +14,6 @@ pub struct Mapper {
     orientation: Orientation,
 }
 
-
-/// Maps the positive to all integers by flipping it to negative on every even number.
-/// ```
-/// // 0, 1,  2,  3,  4
-/// // 0, 1, -1,  2, -2
-/// assert_eq!(0 , double_invert(0));
-/// assert_eq!(1 , double_invert(1));
-/// assert_eq!(-1 , double_invert(2));
-/// assert_eq!(2 , double_invert(3));
-/// assert_eq!(-2 , double_invert(4));
-/// ```
-fn double_invert(n: usize) -> isize {
-    let half = n / 2;
-    if n % 2 == 0 {
-        -(half as isize)
-    } else {
-        (half + 1) as isize
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_double_invert() {
-        assert_eq!(0 , double_invert(0));
-        assert_eq!(1 , double_invert(1));
-        assert_eq!(-1 , double_invert(2));
-        assert_eq!(2 , double_invert(3));
-        assert_eq!(-2 , double_invert(4));
-    }
-}
-
 impl Mapper {
 
     pub fn new(dim: Finite3DDimension) -> Self {
