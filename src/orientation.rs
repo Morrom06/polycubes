@@ -41,18 +41,6 @@ impl Add for Orientation {
 }
 
 impl Orientation {
-    /// Returns
-    /// An [Orientation] that when added to the input will result in the default orientation.
-    pub fn additive_complement(&self) -> Self {
-        Self {
-            x_mir: self.x_mir,
-            y_mir: self.y_mir,
-            z_mir: self.z_mir,
-            x_rot: RotationAmount::Zero - self.x_rot,
-            y_rot: RotationAmount::Zero - self.y_rot,
-            z_rot: RotationAmount::Zero - self.z_rot,
-        }
-    }
 
     pub fn rotate(&mut self, axis: Axis3D, amount: RotationAmount) {
         match axis {
@@ -270,7 +258,6 @@ mod orientation_iter_tests {
 
     #[test]
     fn test_iter() {
-        let itr = OrientationIterator::default();
         let set: HashSet<_> = OrientationIterator::default().collect();
         assert_eq!(512, set.len());
     }
