@@ -4,7 +4,19 @@ use crate::block_arrangement::BlockArrangement;
 /// A datastructure for efficiently storing polycubes.
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct PolyTree {
-
+    // Idea: build on levels, for each unique shape there is a modification set
+    // containing points that generate the next variant.
+    // Issue: say we have two shapes a and b that are not equal.
+    //  How to handle the case where a modification x of a is equal to a modification y of b?
+    //  Additionally x and y may not be equal.
+    //   Maybe use a top down graph to represent this general szenario?
+    //   A node is a unique shape and a n edge is a modification (i.e. addedpoint) that leads
+    //   to another node.
+    //   The graph would have a top down topography with parents (smaller shapes)
+    //   and children (larger shapes).
+    //   Indexing
+    //    - could use index nodes that connect to shapes with the same size (complicates nodes).
+    //    - store node indices of size x in extra field.
 }
 
 impl PolyTree {
