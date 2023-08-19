@@ -3,6 +3,7 @@ mod mapper;
 mod point;
 mod block_hash;
 mod orientation;
+mod poly_tree;
 
 use std::env;
 
