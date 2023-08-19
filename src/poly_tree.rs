@@ -1,5 +1,8 @@
+use petgraph::{Graph, Undirected};
+use petgraph::adj::DefaultIx;
 use serde::{Deserialize, Serialize};
 use crate::block_arrangement::BlockArrangement;
+use crate::point::Point3D;
 
 /// A datastructure for efficiently storing polycubes.
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -17,6 +20,16 @@ pub struct PolyTree {
     //   Indexing
     //    - could use index nodes that connect to shapes with the same size (complicates nodes).
     //    - store node indices of size x in extra field.
+    //   Other issue: the number of edges to parents may be a problem at some point.
+    /// Graph representing the modification relationships between shapes.
+    /// The node value is a pair comprising of the shape size and if the shape itself
+    /// is considered "present" the tree.
+    /// The edge is a [Point3D] representing the point added to the shape that modifies it.
+    graph: Graph<(usize, bool), Point3D<i32>, Undirected>,
+
+    /// A index buffer containing the graph indices to shapes whose
+    /// size is equal to the index +1.
+    indices: Vec<Vec<DefaultIx>>,
 }
 
 impl PolyTree {
