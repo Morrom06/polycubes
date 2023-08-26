@@ -36,6 +36,10 @@ impl Hash for BlockArrangement {
 
 impl PartialEq for BlockArrangement {
     fn eq(&self, other: &Self) -> bool {
+        if BlockHash::from(self) != BlockHash::from(other) {
+            return false;
+        }
+
         let mut mapper = self.mapper.clone();
         OrientationIterator::default().any(|orientation| {
             mapper.set_orientation(orientation);
