@@ -37,6 +37,7 @@ fn calc_num_of_unique_arrangements(num_blocks: u8) -> usize {
             (cache, num)
         }
     } else {
+        println!("Found no cached data, starting from scratch");
         let mut cache = Cache::new();
         let ba = BlockArrangement::new();
         cache.insert(BlockHash::from(&ba), ba);
@@ -47,9 +48,11 @@ fn calc_num_of_unique_arrangements(num_blocks: u8) -> usize {
         let next_larger = generate_increased_variations_from_cache(&cache);
         if let Err(e) = save_computed_values(&next_larger) {
             eprintln!("Unable to save cache of size {generating_size} because: {e}");
+        } else {
+            println!("Saved computed values for arrangements of size: {generating_size}");
+            println!("Found {} arrangements.", next_larger.len());
         }
         cache = next_larger;
-        dbg!(&cache.len(), generating_size);
     }
     cache.len()
 }
