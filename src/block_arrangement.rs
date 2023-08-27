@@ -1,4 +1,5 @@
 pub mod block_variation;
+pub mod block_sets;
 
 use std::hash::{Hash, Hasher};
 use fixedbitset::FixedBitSet;
