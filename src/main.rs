@@ -109,4 +109,3 @@ fn save_computed_values(cache: &Cache) -> io::Result<()> {
         .map_err(|e| Error::new(ErrorKind::InvalidData, e))
         .map(|_len| ())
 }
-

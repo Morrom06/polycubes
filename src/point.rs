@@ -3,7 +3,7 @@ use std::ops::{Add, Sub};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use strum::EnumIter;
+use strum::{EnumIter, IntoEnumIterator};
 
 #[derive(Debug, Default, Eq, PartialEq, Copy, Clone, Hash)]
 #[derive(Setters, MutGetters, Getters)]
@@ -158,6 +158,14 @@ impl<T> Point3D<T> {
             z: f(self.z),
         }
     }
+
+    pub fn map_each<U, X: FnMut(T) -> U, Y: FnMut(T) -> U, Z: FnMut(T) -> U>(self, mut x_f: X, mut y_f: Y, mut z_f: Z) -> Point3D<U> {
+        Point3D {
+            x: x_f(self.x),
+            y: y_f(self.y),
+            z: z_f(self.z),
+        }
+    }
 }
 
 impl<T> From<(T, T, T)> for Point3D<T> {
@@ -234,36 +242,84 @@ mod point_tests {
 }
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
-#[derive(CopyGetters)]
+#[derive(CopyGetters, Setters)]
 #[derive(Serialize, Deserialize)]
 pub struct Finite3DDimension {
-    #[get_copy = "pub"]
-    arm_size: usize,
+    #[getset(get_copy = "pub", set = "pub")]
+    x_pos: u32,
+    #[getset(get_copy = "pub", set = "pub")]
+    x_neg: u32,
+    #[getset(get_copy = "pub", set = "pub")]
+    y_pos: u32,
+    #[getset(get_copy = "pub", set = "pub")]
+    y_neg: u32,
+    #[getset(get_copy = "pub", set = "pub")]
+    z_pos: u32,
+    #[getset(get_copy = "pub", set = "pub")]
+    z_neg: u32,
 }
 
 impl Finite3DDimension {
     /// Returns a new dimension.
     /// Size specifies the length along the 3 axis away from the origin.
-    pub fn new(size: usize) -> Self {
+    pub fn new(x_pos: u32, x_neg: u32, y_pos: u32, y_neg: u32, z_pos: u32, z_neg: u32) -> Self {
         Self {
-            arm_size: size
+            x_pos,
+            x_neg,
+            y_pos,
+            y_neg,
+            z_pos,
+            z_neg,
         }
     }
 
     /// The number of points contained in this dimension.
-    pub fn size(&self) -> usize {
-        let dim_size = self.arm_size * 2 + 1;
-        dim_size * dim_size * dim_size
+    pub fn size(&self) -> u32 {
+        Axis3D::iter()
+            .map(|a| self.axis_len(a))
+            .product()
     }
 
-    pub fn axis_len(&self) -> usize {
-        self.arm_size * 2 + 1
+    pub fn axis_len(&self, axis: Axis3D) -> u32 {
+        let (pos, neg) = match axis {
+            Axis3D::X => {
+                (self.x_pos, self.x_neg)
+            }
+            Axis3D::Y => {
+                (self.y_pos, self.y_neg)
+            }
+            Axis3D::Z => {
+                (self.z_pos, self.z_neg)
+            }
+        };
+        pos + neg + 1
     }
 
+    /// Returns the axis lengts for each of the three axis in order of x, y and z.
+    pub fn all_axis_len(&self) -> (u32, u32, u32) {
+        (self.axis_len(Axis3D::X), self.axis_len(Axis3D::Y), self.axis_len(Axis3D::Z))
+    }
+
+    /// Checks if the given point is in bounds inside this dimension.
+    /// The default Point will always be inside this dimension.
     pub fn in_bounds(&self, p: &Point3D<i32>) -> bool {
-        -(self.arm_size as i32) <= *p.x() && *p.x() <= self.arm_size as i32 &&
-            -(self.arm_size as i32) <= *p.y() && *p.y() <= self.arm_size as i32 &&
-            -(self.arm_size as i32) <= *p.z() && *p.z() <= self.arm_size as i32
+        Axis3D::iter().all(|axis| self.dim_in_bounds(p, axis))
+    }
+
+    /// Checks if the given point is in bounds inside the specified [Axis3D].
+    /// The default Point will always be inside this dimension.
+    pub fn dim_in_bounds(&self, p: &Point3D<i32>, axis: Axis3D) -> bool {
+        match axis {
+            Axis3D::X => {
+                -(self.x_neg as i32) <= *p.x() && *p.x() <= self.x_pos as i32
+            }
+            Axis3D::Y => {
+                -(self.y_neg as i32) <= *p.y() && *p.y() <= self.y_pos as i32
+            }
+            Axis3D::Z => {
+                -(self.z_neg as i32) <= *p.z() && *p.z() <= self.z_pos as i32
+            }
+        }
     }
 }
 
@@ -273,7 +329,7 @@ mod dimension_tests {
 
     #[test]
     fn test_in_bounds() {
-        let dim = Finite3DDimension::new(3);
+        let dim = Finite3DDimension::new(3,3,3,3,3,3);
         for x in -3..4 {
             for y in -3..4 {
                 for z in -3..4 {
